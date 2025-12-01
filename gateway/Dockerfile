@@ -5,7 +5,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm ci --only=production && \
+RUN npm install --production && \
     npm cache clean --force
 
 RUN addgroup -g 1001 -S nodejs && \

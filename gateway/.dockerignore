@@ -1,0 +1,25 @@
+node_modules/
+
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Git
+.git/
+.gitignore
+
+
+
+
+# Docker
+Dockerfile
+Dockerfile.dev
+.dockerignore
+
+# Documentation
+README.md
+*.md
+
+
