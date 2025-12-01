@@ -5,7 +5,8 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install --production && \
+# Install ALL dependencies (including dev deps like TypeScript)
+RUN npm install && \
     npm cache clean --force
 
 COPY . .
