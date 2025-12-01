@@ -1,6 +1,84 @@
-# services:
-  # backend:
+version: "3.8"
 
-  # gateway:
+services:
+  # MongoDB Database
+  mongo:
+    image: bitnami/mongodb:latest
+    container_name: ecommerce-mongo-dev
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+    volumes:
+      - mongo_data:/data/db
+      - mongo_config:/data/configdb
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
-  # mongo:
+  # Backend Service
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile.dev
+    container_name: ecommerce-backend-dev
+    restart: always
+    environment:
+      NODE_ENV: development
+      BACKEND_PORT: ${BACKEND_PORT}
+      MONGO_URI: ${MONGO_URI}
+      MONGO_DATABASE: ${MONGO_DATABASE}
+    volumes:
+      - ../backend/src:/app/src
+      - ../backend/package.json:/app/package.json
+      - backend_node_modules:/app/node_modules
+    networks:
+      - ecommerce-network
+    depends_on:
+      mongo:
+        condition: service_healthy
+    command: npm run dev
+
+  # Gateway Service
+  gateway:
+    build:
+      context: ../gateway
+      dockerfile: Dockerfile.dev
+    container_name: ecommerce-gateway-dev
+    restart: unless-stopped
+    ports:
+      - "${GATEWAY_PORT}:${GATEWAY_PORT}"
+    environment:
+      NODE_ENV: development
+      GATEWAY_PORT: ${GATEWAY_PORT}
+      BACKEND_URL: http://backend:${BACKEND_PORT}
+    volumes:
+      - ../gateway/src:/app/src
+      - ../gateway/package.json:/app/package.json
+      - gateway_node_modules:/app/node_modules
+    networks:
+      - ecommerce-network
+    depends_on:
+      - backend
+    command: npm run dev
+
+networks:
+  ecommerce-network:
+    driver: bridge
+    name: ecommerce-network-dev
+
+volumes:
+  mongo_data:
+    name: ecommerce-mongo-data-dev
+  mongo_config:
+    name: ecommerce-mongo-config-dev
+  backend_node_modules:
+    name: ecommerce-backend-node-modules-dev
+  gateway_node_modules:
+    name: ecommerce-gateway-node-modules-dev
