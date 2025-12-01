@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   mongo:
-    image: bitnami/mongodb:latest
+    image: mongo:7-jammy
     container_name: ecommerce-mongo-prod
     restart: always
     environment:
